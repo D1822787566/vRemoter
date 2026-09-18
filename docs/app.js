@@ -48,3 +48,27 @@ document.querySelectorAll('[data-donation]').forEach((button) => {
 });
 
 applyLanguage(language);
+
+const actions = [
+  ['none', '不执行'], ['copy', '复制'], ['paste', '粘贴'], ['ctrl+c', 'Ctrl+C'], ['ctrl+v', 'Ctrl+V'],
+  ['left', '左'], ['right', '右'], ['up', '上'], ['down', '下'], ['enter', '确认']
+];
+const defaultKeymap = {
+  'VK_BROWSER_HOME': { single: 'copy', double: 'paste' }, 'LEFT': { single: 'none', double: 'none' },
+  'RIGHT': { single: 'none', double: 'none' }, 'UP/HOME': { single: 'none', double: 'none' },
+  'DOWN': { single: 'none', double: 'none' }, 'ENTER/OK': { single: 'none', double: 'none' },
+  'FUNCTION-C': { single: 'none', double: 'none' }, 'FUNCTION-D': { single: 'none', double: 'none' }
+};
+const keymap = JSON.parse(localStorage.getItem('vremoter-keymap') || 'null') || structuredClone(defaultKeymap);
+const editor = document.querySelector('#keymap-editor');
+function renderKeymap() {
+  editor.innerHTML = Object.entries(keymap).map(([key, values]) => `<div class="keymap-row"><strong>${key}</strong>${['single', 'double'].map((kind) => `<label>${kind === 'single' ? '单击' : '双击'}<select data-key="${key}" data-kind="${kind}">${actions.map(([value, label]) => `<option value="${value}" ${values[kind] === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>`).join('')}</div>`).join('');
+  editor.querySelectorAll('select').forEach((select) => select.addEventListener('change', () => { keymap[select.dataset.key][select.dataset.kind] = select.value; localStorage.setItem('vremoter-keymap', JSON.stringify(keymap)); document.querySelector('#config-status').textContent = '已保存到浏览器'; }));
+}
+document.querySelector('#download-keymap').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ keys: keymap }, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'keymap.json'; link.click(); URL.revokeObjectURL(link.href);
+  document.querySelector('#config-status').textContent = '配置文件已下载';
+});
+document.querySelector('#reset-keymap').addEventListener('click', () => { Object.assign(keymap, structuredClone(defaultKeymap)); localStorage.removeItem('vremoter-keymap'); renderKeymap(); document.querySelector('#config-status').textContent = '已恢复默认'; });
+renderKeymap();
