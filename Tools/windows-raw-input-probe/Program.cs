@@ -2,12 +2,14 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.ComponentModel;
 using System.Windows.Forms;
+using WindowsRawInputProbe;
 
 ApplicationConfiguration.Initialize();
 Application.Run(new ProbeWindow());
 
 sealed class ProbeWindow : Form
 {
+    static readonly MappingConfig Config = LoadConfig();
     const int WM_INPUT = 0x00FF;
     const uint RID_INPUT = 0x10000003;
     const uint RIDEV_INPUTSINK = 0x00000100;
@@ -33,7 +35,7 @@ sealed class ProbeWindow : Form
     readonly LowLevelKeyboardProc hookCallback;
     IntPtr keyboardHook;
     const uint KEYEVENTF_KEYUP = 0x0002;
-    bool copyPending;
+    bool gesturePending;
     readonly object gestureLock = new();
 
     public ProbeWindow()
@@ -64,7 +66,7 @@ sealed class ProbeWindow : Form
             var key = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
             if (key.VkCode == 0xAC)
             {
-                HandleBrowserHomeGesture();
+                HandleGesture("VK_BROWSER_HOME");
                 return (IntPtr)1;
             }
         }
@@ -110,37 +112,46 @@ sealed class ProbeWindow : Form
         finally { Marshal.FreeHGlobal(buffer); }
     }
 
-    void HandleBrowserHomeGesture()
+    void HandleGesture(string keyName)
     {
         lock (gestureLock)
         {
-            if (copyPending)
+            var mapping = Config.Get(keyName);
+            if (gesturePending)
             {
-                copyPending = false;
-                SendShortcut(0x56); // Ctrl+V
+                gesturePending = false;
+                Execute(mapping.Double);
                 return;
             }
 
-            copyPending = true;
+            gesturePending = true;
             _ = Task.Run(async () =>
             {
                 await Task.Delay(400);
                 lock (gestureLock)
                 {
-                    if (!copyPending) return;
-                    copyPending = false;
-                    SendShortcut(0x43); // Ctrl+C
+                    if (!gesturePending) return;
+                    gesturePending = false;
+                    Execute(mapping.Single);
                 }
             });
         }
     }
 
-    static void SendShortcut(byte key)
+    static void Execute(ActionKind action)
     {
+        byte key = action switch { ActionKind.Copy or ActionKind.CtrlC => 0x43, ActionKind.Paste or ActionKind.CtrlV => 0x56, _ => 0 };
+        if (key == 0) return;
         keybd_event(0x11, 0, 0, UIntPtr.Zero);
         keybd_event(key, 0, 0, UIntPtr.Zero);
         keybd_event(key, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(0x11, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         Console.WriteLine(key == 0x43 ? "ACTION Ctrl+C" : "ACTION Ctrl+V");
+    }
+
+    static MappingConfig LoadConfig()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "keymap.json");
+        return File.Exists(path) ? MappingConfig.Parse(File.ReadAllText(path)) : MappingConfig.Default();
     }
 }

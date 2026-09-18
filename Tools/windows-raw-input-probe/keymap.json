@@ -1,0 +1,10 @@
+{
+  "keys": {
+    "VK_BROWSER_HOME": { "single": "copy", "double": "paste" },
+    "LEFT": { "single": "left" },
+    "RIGHT": { "single": "right" },
+    "UP": { "single": "up" },
+    "DOWN": { "single": "down" },
+    "ENTER": { "single": "enter" }
+  }
+}
