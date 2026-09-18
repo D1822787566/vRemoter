@@ -102,6 +102,20 @@ figcaption { margin-top: 11px; color: var(--secondary); font-size: 11px; }
   background: var(--surface);
 }
 .config-band { padding-block: 76px; }
+.console-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 28px; }
+.console-heading h2 { margin-bottom: 0; }
+.running-pill { display: inline-flex; align-items: center; gap: 8px; color: var(--green); font-weight: 700; }
+.running-pill i, .device-card i { width: 10px; height: 10px; display: inline-block; border-radius: 50%; background: var(--green); }
+.console-grid { display: grid; grid-template-columns: 220px minmax(280px, .85fr) minmax(390px, 1.15fr); gap: 14px; }
+.device-panel, .remote-panel, .mapping-panel { min-height: 560px; padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+.device-panel h3, .remote-panel h3, .mapping-panel h3 { margin-bottom: 5px; }
+.device-card { width: 100%; margin-top: 14px; padding: 15px; display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; text-align: left; border: 1px solid var(--line); border-radius: 10px; color: var(--text); background: var(--surface-2); cursor: pointer; }
+.device-card.active { border-color: var(--green); }
+.device-card small { grid-column: 2; color: var(--secondary); font-size: 11px; }.device-card em { grid-column: 2; color: var(--green); font-size: 11px; font-style: normal; }.device-card .muted { background: #59616d; }
+.device-foot { margin-top: auto; padding-top: 220px; color: var(--green); font-size: 12px; line-height: 1.5; }
+.remote-toolbar, .mapping-panel-head { display: flex; align-items: start; justify-content: space-between; gap: 10px; }.remote-toolbar p, .mapping-panel-head p { margin: 0; font-size: 12px; }
+.view-tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 7px; }.view-tabs button { padding: 7px 9px; border: 0; border-radius: 5px; color: var(--secondary); background: transparent; cursor: pointer; font-size: 11px; }.view-tabs button.active { color: #07120c; background: var(--green); }
+.remote-stage { min-height: 440px; display: grid; place-items: center; }.remote { position: relative; width: 152px; height: 370px; padding: 18px 13px; border: 2px solid #59616a; border-radius: 70px; background: linear-gradient(150deg, #30343a, #111315 75%); box-shadow: 0 22px 40px #0008; }.remote-led { position: absolute; top: 17px; left: 50%; width: 5px; height: 5px; border-radius: 50%; background: #40d9e8; }.power { position: absolute; top: 15px; right: 20px; color: #bac3ca; font-size: 16px; }.dial { width: 104px; height: 104px; margin: 26px auto 16px; display: grid; place-items: center; border: 1px solid #5b626a; border-radius: 50%; background: #090a0b; }.dial span { width: 57px; height: 57px; border-radius: 50%; background: #2a2d31; }.remote-pair { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }.remote-pair.lower { grid-template-columns: repeat(3, 1fr); margin-top: 10px; }.remote button, .keyboard-grid button { border: 1px solid #5d646b; color: #eef1f2; background: #24282d; cursor: pointer; }.remote-pair button { aspect-ratio: 1; border-radius: 50%; font-size: 11px; }.remote-back { display: none; width: 230px; height: 350px; border-radius: 28px; padding: 18px; }.remote-back.visible { display: block; }.remote-front.hidden { display: none; }.keyboard-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }.keyboard-grid button { min-height: 33px; border-radius: 5px; font-size: 9px; }.mapping-panel { overflow: hidden; }.mapping-panel-head select { max-width: 125px; padding: 8px; border: 1px solid var(--line); border-radius: 7px; color: var(--text); background: var(--surface-2); }.mapping-panel .keymap-editor { max-height: 440px; margin-top: 20px; overflow: auto; }.mapping-panel .keymap-row { grid-template-columns: 1fr 1fr; }.mapping-panel .keymap-row strong { grid-column: 1 / -1; }
 .config-toolbar { display: flex; align-items: center; gap: 12px; margin: 24px 0; }
 .secondary-button { min-height: 48px; padding: 0 18px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); background: var(--surface-2); cursor: pointer; }
 #config-status { color: var(--green); font-size: 13px; }
@@ -207,6 +221,7 @@ footer { border-top: 1px solid var(--line); }
 @media (max-width: 980px) {
   .top-actions > a:not(.download-button) { display: none; }
   .hero,
+  .console-grid,
   .mapping-layout,
   .voice-layout,
   .release-section,
