@@ -78,8 +78,8 @@ renderKeymap();
 document.querySelectorAll('[data-remote-view]').forEach((button) => button.addEventListener('click', () => {
   const back = button.dataset.remoteView === 'back';
   document.querySelectorAll('[data-remote-view]').forEach((item) => item.classList.toggle('active', item === button));
-  hotspotLayer.classList.toggle('back-view', back);
-  document.querySelector('#remote-mode-label').textContent = back ? '真实设备图 · 背面键盘按键' : '真实设备图 · 点击按键查看映射';
+  document.querySelector('.photo-stage').classList.toggle('back-view', back);
+  document.querySelector('#remote-mode-label').textContent = back ? '背面键盘 · 点击按键查看映射' : '正面遥控器 · 点击按键查看映射';
 }));
 document.querySelectorAll('[data-key]').forEach((button) => button.addEventListener('click', () => {
   const key = button.dataset.key;
