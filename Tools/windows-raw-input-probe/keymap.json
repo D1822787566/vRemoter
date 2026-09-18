@@ -1,10 +1,12 @@
 {
   "keys": {
     "VK_BROWSER_HOME": { "single": "copy", "double": "paste" },
-    "LEFT": { "single": "left" },
-    "RIGHT": { "single": "right" },
-    "UP": { "single": "up" },
-    "DOWN": { "single": "down" },
-    "ENTER": { "single": "enter" }
+    "LEFT": { "single": "none" },
+    "RIGHT": { "single": "none" },
+    "UP/HOME": { "single": "none" },
+    "DOWN": { "single": "none" },
+    "ENTER/OK": { "single": "none" },
+    "FUNCTION-C": { "single": "none" },
+    "FUNCTION-D": { "single": "none" }
   }
 }

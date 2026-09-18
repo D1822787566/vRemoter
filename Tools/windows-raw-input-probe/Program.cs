@@ -35,7 +35,7 @@ sealed class ProbeWindow : Form
     readonly LowLevelKeyboardProc hookCallback;
     IntPtr keyboardHook;
     const uint KEYEVENTF_KEYUP = 0x0002;
-    bool gesturePending;
+    readonly Dictionary<string, bool> gesturePending = new(StringComparer.OrdinalIgnoreCase);
     readonly object gestureLock = new();
 
     public ProbeWindow()
@@ -95,6 +95,7 @@ sealed class ProbeWindow : Form
             var isM5 = devicePath.Contains("VID_1915&PID_1025", StringComparison.OrdinalIgnoreCase);
             var isMedia = keyboard.VKey is 0xAC or 0xAD;
             if (!isM5 && !isMedia) return;
+            if ((keyboard.Flags & 0x01) != 0) return;
             var label = keyboard.MakeCode switch
             {
                 0x48 => "UP/HOME",
@@ -108,6 +109,7 @@ sealed class ProbeWindow : Form
                 _ => "UNKNOWN"
             };
             Console.WriteLine($"KEY label={label} device={devicePath} make=0x{keyboard.MakeCode:X2} vkey=0x{keyboard.VKey:X2} flags=0x{keyboard.Flags:X}");
+            if (isM5) HandleGesture(label);
         }
         finally { Marshal.FreeHGlobal(buffer); }
     }
@@ -117,21 +119,22 @@ sealed class ProbeWindow : Form
         lock (gestureLock)
         {
             var mapping = Config.Get(keyName);
-            if (gesturePending)
+            gesturePending.TryGetValue(keyName, out var pending);
+            if (pending)
             {
-                gesturePending = false;
+                gesturePending[keyName] = false;
                 Execute(mapping.Double);
                 return;
             }
 
-            gesturePending = true;
+            gesturePending[keyName] = true;
             _ = Task.Run(async () =>
             {
                 await Task.Delay(400);
                 lock (gestureLock)
                 {
-                    if (!gesturePending) return;
-                    gesturePending = false;
+                    if (!gesturePending.TryGetValue(keyName, out var stillPending) || !stillPending) return;
+                    gesturePending[keyName] = false;
                     Execute(mapping.Single);
                 }
             });
@@ -140,13 +143,24 @@ sealed class ProbeWindow : Form
 
     static void Execute(ActionKind action)
     {
-        byte key = action switch { ActionKind.Copy or ActionKind.CtrlC => 0x43, ActionKind.Paste or ActionKind.CtrlV => 0x56, _ => 0 };
+        byte key = action switch
+        {
+            ActionKind.Copy or ActionKind.CtrlC => 0x43,
+            ActionKind.Paste or ActionKind.CtrlV => 0x56,
+            ActionKind.Left => 0x25,
+            ActionKind.Right => 0x27,
+            ActionKind.Up => 0x26,
+            ActionKind.Down => 0x28,
+            ActionKind.Enter => 0x0D,
+            _ => 0
+        };
         if (key == 0) return;
-        keybd_event(0x11, 0, 0, UIntPtr.Zero);
+        var modifier = action is ActionKind.Copy or ActionKind.Paste or ActionKind.CtrlC or ActionKind.CtrlV;
+        if (modifier) keybd_event(0x11, 0, 0, UIntPtr.Zero);
         keybd_event(key, 0, 0, UIntPtr.Zero);
         keybd_event(key, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
-        keybd_event(0x11, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
-        Console.WriteLine(key == 0x43 ? "ACTION Ctrl+C" : "ACTION Ctrl+V");
+        if (modifier) keybd_event(0x11, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        Console.WriteLine($"ACTION {action}");
     }
 
     static MappingConfig LoadConfig()
